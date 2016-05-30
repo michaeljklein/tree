@@ -72,41 +72,34 @@ extern const struct linedraw *linedraw;
 
 // NEW
 // Note, this should be moved once working. It's just convenient to have here for now.
-size_t run_command(char *cmd, char*file_path, char* result)
+void run_command(char *cmd, char*path, char*file_name, char* result)
 {
-    size_t result_size = 0;
     FILE *cmd_fp;
-    char cmd_result[256];
+    
+    char result_buf[256];
+    char result_buf2[256];
     
     char cmd_buf[256];
-    snprintf(cmd_buf, 256, "%s %s", cmd, file_path);
-    
+    snprintf(cmd_buf, 255, "%s %s/%s", cmd, path, file_name);
     cmd_fp = popen(cmd_buf, "r");
     if (cmd_fp != NULL) {
-        size_t newLen = fread(cmd_result, sizeof(char), 255, cmd_fp);
+        size_t newLen = fread(result_buf, sizeof(char), 255, cmd_fp);
         if (newLen == 0) {
             fprintf(stderr, "Failed to run command: %s\n", cmd_buf);
-            return 0;
         } else {
-            cmd_result[newLen++] = '\0'; /* Just to be safe. */
-            strncpy(result, cmd_result, newLen);
-            while (result[result_size++]) {
-                if (result[result_size] == '\n') {
-                    result[result_size] = ' ';
-                }
-            }}
+            result_buf[newLen++] = '\0';
+            int i, j;
+            i = j = 0;
+            while (result_buf[i++] == ' ') {}
+            i--;
+            while (i <= newLen) {
+                if (result_buf[i] != '\n') {result_buf2[j++] = result_buf[i];}
+                i++;
+            }
+            snprintf(result, 255, ": %s", result_buf2);
         }
+    }
     pclose(cmd_fp);
-    
-    printf("cmd (internal) result: %s\n", cmd_result);
-    printf("cmd (external) result: %s\n", result);
-    
-    return --result_size;
-    
-    // Testing/example code:
-    //    char bf[256] = {0};
-    //    int worked = run_command("echo \"hi\nthere\"", bf);
-    //    printf("worked: %d\n", worked);
 }
 
 
@@ -326,18 +319,15 @@ int main(int argc, char **argv)
 	    }
         // NEW
           if (!strncmp("--cmd",argv[i],5)) {
-              printf("Hey, it looks like `tree` found my new flag!\n");
               j = 5;
               if (*(argv[i]+5) == '=') {
                   if (*(argv[i]+ (++j))) {
                       cmdstr=scopy(argv[i]+j);
                       cmdflag = TRUE;
-                      printf("cmd passed by '=': %s\n", cmdstr);
                       j = strlen(argv[i])-1;
                       break;
                   }
               } else if (argv[n] != NULL) {
-                  printf("cmd passed as extra arg: %s\n", argv[n]);
                   cmdflag = TRUE;
                   cmdstr = scopy(argv[n]);
                   n++;
@@ -730,23 +720,6 @@ struct _info **read_dir(char *dir, int *n)
     dl[p]->atime = lst.st_atime;
     dl[p]->ctime = lst.st_ctime;
     dl[p]->mtime = lst.st_mtime;
-      
-      if (cmdflag) { // if the flag has been passed
-          if (*dl){ // and the directory list is not null
-              if(!(dl[p]->cmd_size)) { // and the command hasn't been executed
-                  if (S_ISDIR(dl[p]->mode)) { // if it's a directory
-                      dl[p]->cmd_size++; // don't do anything, leave dir result strings blank
-                  } else { // otherwise, run the command on the file and store the result
-                      char cmd_buf[256] = {'\0'};
-                      size_t cmd_size = run_command(cmdstr, path, cmd_buf);
-                      strncpy(dl[p]->cmd_result, cmd_buf, cmd_size);
-                      dl[p]->cmd_size = cmd_size;
-                  }
-
-                  
-              }
-          }
-      }
       
 
 #ifdef __EMX__

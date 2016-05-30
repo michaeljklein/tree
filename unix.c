@@ -18,6 +18,7 @@
  */
 #include "tree.h"
 
+extern bool cmdflag;
 extern bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
 extern bool Dflag, inodeflag, devflag, Rflag, duflag, pruneflag;
 extern bool noindent, force_color, xdev, nolinks, flimit, nosort;
@@ -29,6 +30,7 @@ extern int Level, *dirs, maxdirs;
 
 extern bool colorize, linktargetcolor;
 extern char *endcode;
+extern char *cmdstr;
 
 off_t unix_listdir(char *d, int *dt, int *ft, u_long lev, dev_t dev)
 {
@@ -101,8 +103,12 @@ off_t unix_listdir(char *d, int *dt, int *ft, u_long lev, dev_t dev)
       sprintf(path,"%s",(*dir)->name);
     }
 
-      printf("(path: %s)", path);
     printit(path);
+    if (cmdflag && !S_ISDIR((*dir)->mode)) {
+      char cmd_buf[256];
+      run_command(cmdstr, d, path, cmd_buf);
+      fprintf(outfile, cmd_buf);
+    }
 
     if (colored) fprintf(outfile,"%s",endcode);
     if (Fflag && !(*dir)->lnk) {
