@@ -70,8 +70,54 @@ extern char *leftcode, *rightcode, *endcode;
 extern const struct linedraw *linedraw;
 
 
+// NEW
+// Note, this should be moved once working. It's just convenient to have here for now.
+int run_command(char *cmd, char* result)
+{
+    
+    FILE *cmd_fp;
+    char cmd_result[256];
+    
+    cmd_fp = popen(cmd, "r");
+    if (cmd_fp != NULL) {
+        size_t newLen = fread(cmd_result, sizeof(char), 255, cmd_fp);
+        if (newLen == 0) {
+            printf("Failed to run command\n" );
+            return 1;
+        } else {
+//            cmd_result[newLen++] = '\0'; /* Just to be safe. */
+            cmd_result[newLen++] = '\0'; /* Just to be safe. */
+            strncpy(result, cmd_result, newLen);
+            
+            int i = 0;
+            while (result[i++]) {
+                if (result[i] == '\n') {
+                    result[i] = ' ';
+                }
+            }
+            
+            }
+        }
+        
+    pclose(cmd_fp);
+    
+    printf("cmd (internal) result: %s\n", cmd_result);
+    printf("cmd (external) result: %s\n", result);
+    
+    return 0;
+}
+
+
+
+
 int main(int argc, char **argv)
 {
+    char bf[256] = {0};
+    int worked = run_command("echo \"hi\nthere\"", bf);
+    printf("worked: %d\n", worked);
+    
+    
+    
   char **dirname = NULL;
   int i,j=0,n,p,q,dtotal,ftotal,colored = FALSE;
   struct stat st;
