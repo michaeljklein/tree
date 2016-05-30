@@ -89,6 +89,9 @@ struct _info {
   long attr;
   #endif
   char *err;
+  // NEW
+    char cmd_result[256];
+    size_t cmd_size;
   struct _info **child;
 };
 /* hash.c */

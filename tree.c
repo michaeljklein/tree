@@ -72,39 +72,41 @@ extern const struct linedraw *linedraw;
 
 // NEW
 // Note, this should be moved once working. It's just convenient to have here for now.
-int run_command(char *cmd, char* result)
+size_t run_command(char *cmd, char*file_path, char* result)
 {
-    
+    size_t result_size = 0;
     FILE *cmd_fp;
     char cmd_result[256];
     
-    cmd_fp = popen(cmd, "r");
+    char cmd_buf[256];
+    snprintf(cmd_buf, 256, "%s %s", cmd, file_path);
+    
+    cmd_fp = popen(cmd_buf, "r");
     if (cmd_fp != NULL) {
         size_t newLen = fread(cmd_result, sizeof(char), 255, cmd_fp);
         if (newLen == 0) {
-            printf("Failed to run command\n" );
-            return 1;
+            fprintf(stderr, "Failed to run command: %s\n", cmd_buf);
+            return 0;
         } else {
-//            cmd_result[newLen++] = '\0'; /* Just to be safe. */
             cmd_result[newLen++] = '\0'; /* Just to be safe. */
             strncpy(result, cmd_result, newLen);
-            
-            int i = 0;
-            while (result[i++]) {
-                if (result[i] == '\n') {
-                    result[i] = ' ';
+            while (result[result_size++]) {
+                if (result[result_size] == '\n') {
+                    result[result_size] = ' ';
                 }
-            }
-            
-            }
+            }}
         }
-        
     pclose(cmd_fp);
     
     printf("cmd (internal) result: %s\n", cmd_result);
     printf("cmd (external) result: %s\n", result);
     
-    return 0;
+    return --result_size;
+    
+    // Testing/example code:
+    //    char bf[256] = {0};
+    //    int worked = run_command("echo \"hi\nthere\"", bf);
+    //    printf("worked: %d\n", worked);
 }
 
 
@@ -112,12 +114,6 @@ int run_command(char *cmd, char* result)
 
 int main(int argc, char **argv)
 {
-    char bf[256] = {0};
-    int worked = run_command("echo \"hi\nthere\"", bf);
-    printf("worked: %d\n", worked);
-    
-    
-    
   char **dirname = NULL;
   int i,j=0,n,p,q,dtotal,ftotal,colored = FALSE;
   struct stat st;
@@ -688,6 +684,19 @@ struct _info **read_dir(char *dir, int *n)
       st.st_ino = lst.st_ino;
     }
       
+
+//      char cmd_buffer[256] = {0};
+//      size_t cmd_size = run_command("wc", path, cmd_buffer);
+////      printf("\nfullpath: %s\n", path);
+//      printf("\ncmd result: %s\n", cmd_buffer);
+//      char * tt = dl[p]->cmd;
+//      printf("\nHi: %d\n", tt);
+////      if (){
+////          printf("cmd t\n");
+////      } else {
+////          printf("cmd f\n");
+////      }
+//      
 #ifndef __EMX__
     if ((lst.st_mode & S_IFMT) != S_IFDIR && !(((lst.st_mode & S_IFMT) == S_IFLNK) && lflag)) {
       if (pattern && patmatch(ent->d_name,pattern) != 1) continue;
@@ -721,6 +730,24 @@ struct _info **read_dir(char *dir, int *n)
     dl[p]->atime = lst.st_atime;
     dl[p]->ctime = lst.st_ctime;
     dl[p]->mtime = lst.st_mtime;
+      
+      if (cmdflag) { // if the flag has been passed
+          if (*dl){ // and the directory list is not null
+              if(!(dl[p]->cmd_size)) { // and the command hasn't been executed
+                  if (S_ISDIR(dl[p]->mode)) { // if it's a directory
+                      dl[p]->cmd_size++; // don't do anything, leave dir result strings blank
+                  } else { // otherwise, run the command on the file and store the result
+                      char cmd_buf[256] = {'\0'};
+                      size_t cmd_size = run_command(cmdstr, path, cmd_buf);
+                      strncpy(dl[p]->cmd_result, cmd_buf, cmd_size);
+                      dl[p]->cmd_size = cmd_size;
+                  }
+
+                  
+              }
+          }
+      }
+      
 
 #ifdef __EMX__
     dl[p]->attr = lst.st_attr;
@@ -747,6 +774,7 @@ struct _info **read_dir(char *dir, int *n)
     dl[p]->issok = ((st.st_mode & S_IFMT) == S_IFSOCK);
     dl[p]->isfifo = ((st.st_mode & S_IFMT) == S_IFIFO);
     dl[p++]->isexe = (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ? 1 : 0;
+
   }
   closedir(d);
   *n = p;

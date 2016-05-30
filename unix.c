@@ -101,6 +101,7 @@ off_t unix_listdir(char *d, int *dt, int *ft, u_long lev, dev_t dev)
       sprintf(path,"%s",(*dir)->name);
     }
 
+      printf("(path: %s)", path);
     printit(path);
 
     if (colored) fprintf(outfile,"%s",endcode);
@@ -111,6 +112,7 @@ off_t unix_listdir(char *d, int *dt, int *ft, u_long lev, dev_t dev)
     if ((*dir)->lnk) {
       fprintf(outfile," -> ");
       if (colorize) colored = color((*dir)->lnkmode,(*dir)->lnk,(*dir)->orphan,TRUE);
+            printf("(path: %s)", (*dir)->lnk);
       printit((*dir)->lnk);
       if (colored) fprintf(outfile,"%s",endcode);
       if (Fflag) {
@@ -213,6 +215,7 @@ void r_listdir(struct _info **dir, char *d, int *dt, int *ft, u_long lev)
       sprintf(path,"%s",(*dir)->name);
     }
     
+      printf("(path: %s)", path);
     printit(path);
     
     if (colored) fprintf(outfile,"%s",endcode);
@@ -223,6 +226,7 @@ void r_listdir(struct _info **dir, char *d, int *dt, int *ft, u_long lev)
     if ((*dir)->lnk) {
       fprintf(outfile," -> ");
       if (colorize) colored = color((*dir)->lnkmode,(*dir)->lnk,(*dir)->orphan,TRUE);
+            printf("(path: %s)", (*dir)->lnk);
       printit((*dir)->lnk);
       if (colored) fprintf(outfile,"%s",endcode);
       if (Fflag) {
