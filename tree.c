@@ -284,14 +284,19 @@ int main(int argc, char **argv)
 	    }
         // NEW
           if (!strncmp("--cmd",argv[i],5)) {
+              printf("Hey, it looks like `tree` found my new flag!\n");
               j = 5;
-              if (*(argv[i]+j) == '=') {
+              if (*(argv[i]+5) == '=') {
                   if (*(argv[i]+ (++j))) {
                       cmdstr=scopy(argv[i]+j);
+                      cmdflag = TRUE;
+                      printf("cmd passed by '=': %s\n", cmdstr);
                       j = strlen(argv[i])-1;
                       break;
                   }
               } else if (argv[n] != NULL) {
+                  printf("cmd passed as extra arg: %s\n", argv[n]);
+                  cmdflag = TRUE;
                   cmdstr = scopy(argv[n]);
                   n++;
                   j = strlen(argv[i])-1;
@@ -299,7 +304,6 @@ int main(int argc, char **argv)
                   fprintf(stderr,"tree: missing argument to --cmd\n");
                   exit(1);
               }
-              printf("Hey, it looks like `tree` found my new flag!\n");
               break;
           }
           
