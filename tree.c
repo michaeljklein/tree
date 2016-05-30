@@ -25,12 +25,15 @@ static char *hversion="\t\t tree v1.6.0 %s 1996 - 2011 by Steve Baker and Thomas
 		      "\t\t Charsets / OS/2 support %s 2001 by Kyosuke Tokoro\n";
 
 /* Globals */
+bool cmdflag; // NEW
 bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
 bool qflag, Nflag, Qflag, Dflag, inodeflag, devflag, hflag, Rflag;
 bool Hflag, siflag, cflag, Xflag, duflag, pruneflag;
 bool noindent, force_color, nocolor, xdev, noreport, nolinks, flimit, dirsfirst, nosort;
 char *pattern = NULL, *ipattern = NULL, *host = NULL, *title = "Directory Tree", *sp = " ";
 char *timefmt = NULL;
+// NEW
+char *cmdstr = NULL;
 const char *charset = NULL;
 
 off_t (*listdir)(char *, int *, int *, u_long, dev_t) = unix_listdir;
@@ -77,6 +80,7 @@ int main(int argc, char **argv)
   mode_t mt;
 
   q = p = dtotal = ftotal = 0;
+  cmdflag = FALSE;
   aflag = dflag = fflag = lflag = pflag = sflag = Fflag = uflag = gflag = FALSE;
   Dflag = qflag = Nflag = Qflag = Rflag = hflag = Hflag = siflag = cflag = FALSE;
   noindent = force_color = nocolor = xdev = noreport = nolinks = FALSE;
@@ -278,24 +282,46 @@ int main(int argc, char **argv)
 	      dirsfirst = TRUE;
 	      break;
 	    }
-	    if (!strncmp("--filelimit",argv[i],11)) {
-	      j = 11;
-	      if (*(argv[i]+11) == '=') {
-		if (*(argv[i]+12)) {
-		  flimit=atoi(argv[i]+12);
-		  j = strlen(argv[i])-1;
-		  break;
-		}
-	      }
-	      if (argv[n] != NULL) {
-		flimit = atoi(argv[n++]);
-		j = strlen(argv[i])-1;
-	      } else {
-		fprintf(stderr,"tree: missing argument to --filelimit\n");
-		exit(1);
-	      }
-	      break;
+        // NEW
+          if (!strncmp("--cmd",argv[i],5)) {
+              j = 5;
+              if (*(argv[i]+j) == '=') {
+                  if (*(argv[i]+ (++j))) {
+                      cmdstr=scopy(argv[i]+j);
+                      j = strlen(argv[i])-1;
+                      break;
+                  }
+              } else if (argv[n] != NULL) {
+                  cmdstr = scopy(argv[n]);
+                  n++;
+                  j = strlen(argv[i])-1;
+              } else {
+                  fprintf(stderr,"tree: missing argument to --cmd\n");
+                  exit(1);
+              }
+              printf("Hey, it looks like `tree` found my new flag!\n");
+              break;
+          }
+          
+        if (!strncmp("--filelimit",argv[i],11)) {
+            j = 11;
+            if (*(argv[i]+11) == '=') {
+                if (*(argv[i]+12)) {
+                    flimit=atoi(argv[i]+12);
+                    j = strlen(argv[i])-1;
+                    break;
+                }
+            }
+            if (argv[n] != NULL) {
+                flimit = atoi(argv[n++]);
+                j = strlen(argv[i])-1;
+            } else {
+                fprintf(stderr,"tree: missing argument to --filelimit\n");
+                exit(1);
+            }
+            break;
 	    }
+          
 	    if (!strncmp("--charset",argv[i],9)){
 	      j = 9;
 	      if (*(argv[i]+j) == '=') {
@@ -332,23 +358,23 @@ int main(int argc, char **argv)
 	      break;
 	    }
 	    if (!strncmp("--timefmt",argv[i],9)) {
-	      j = 9;
-	      if (*(argv[i]+j) == '=') {
-		if (*(argv[i]+ (++j))) {
-		  timefmt=scopy(argv[i]+j);
-		  j = strlen(argv[i])-1;
-		  break;
-		}
-	      } else if (argv[n] != NULL) {
-		timefmt = scopy(argv[n]);
-		n++;
-		j = strlen(argv[i])-1;
-	      } else {
-		fprintf(stderr,"tree: missing argument to --timefmt\n");
-		exit(1);
-	      }
-	      Dflag = TRUE;
-	      break;
+            j = 9;
+            if (*(argv[i]+j) == '=') {
+                if (*(argv[i]+ (++j))) {
+                    timefmt=scopy(argv[i]+j);
+                    j = strlen(argv[i])-1;
+                    break;
+                }
+            } else if (argv[n] != NULL) {
+                timefmt = scopy(argv[n]);
+                n++;
+                j = strlen(argv[i])-1;
+            } else {
+                fprintf(stderr,"tree: missing argument to --timefmt\n");
+                exit(1);
+            }
+            Dflag = TRUE;
+            break;
 	    }
 	  }
 	default:
